@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    user_id: i32,
-    username: String,
-    exp: usize,
+pub struct Claims {
+    pub user_id: i32,
+    pub username: String,
+    pub exp: usize,
 }
 
 pub fn generate_token(

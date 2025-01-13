@@ -11,3 +11,5 @@ validator = { version = "0.19", features = ["derive"] }
 bcrypt = "0.16"
 jsonwebtoken = "9.3.0"
 dotenvy = "0.15.7"
+futures = "0.3.31"
+actix-service = "2.0.2"

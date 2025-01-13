@@ -4,9 +4,11 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
+use authmiddleware::AuthMiddleware;
 use dotenvy::dotenv;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
+mod authmiddleware;
 mod errors;
 mod models;
 mod routes;
@@ -43,7 +45,11 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/create",
                         web::post().to(routes::user::create_user::create_user),
-                    ),
+                    )
+                    .service(web::scope("/protected").wrap(AuthMiddleware).route(
+                        "/currentUser",
+                        web::get().to(routes::user::current_user::get_current_user),
+                    )),
             )
     })
     .bind(("127.0.0.1", 8000))?
