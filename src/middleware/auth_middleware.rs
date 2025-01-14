@@ -6,7 +6,7 @@ use actix_web::{
     Error, HttpResponse,
 };
 
-use crate::{errors::GeneralError, AppState};
+use crate::{errors::GeneralError, tokens::check_user_exists, AppState};
 
 pub async fn auth_middleware(
     req: ServiceRequest,
@@ -40,5 +40,16 @@ pub async fn auth_middleware(
         return Ok(req.into_response(error_response.map_into_boxed_body()));
     }
 
-    next.call(req).await
+    let claims = token_eval_result.unwrap();
+    let user_exists =
+        check_user_exists::check_user_exists(claims.user_id, &claims.username, &state).await;
+
+    match user_exists {
+        Err(err_string) => {
+            let error_response =
+                HttpResponse::BadRequest().json(GeneralError { errors: err_string });
+            Ok(req.into_response(error_response.map_into_boxed_body()))
+        }
+        Ok(_) => next.call(req).await,
+    }
 }
