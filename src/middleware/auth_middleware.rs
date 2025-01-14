@@ -3,8 +3,15 @@ use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
     middleware::Next,
     web::Data,
-    Error, HttpResponse,
+    Error, HttpMessage, HttpResponse,
 };
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub struct UserData {
+    pub username: String,
+    pub user_id: i32,
+}
 
 use crate::{errors::GeneralError, tokens::check_user_exists, AppState};
 
@@ -50,6 +57,13 @@ pub async fn auth_middleware(
                 HttpResponse::BadRequest().json(GeneralError { errors: err_string });
             Ok(req.into_response(error_response.map_into_boxed_body()))
         }
-        Ok(_) => next.call(req).await,
+        Ok(_) => {
+            req.extensions_mut().insert(UserData {
+                user_id: claims.user_id,
+                username: claims.username,
+            });
+
+            next.call(req).await
+        }
     }
 }
