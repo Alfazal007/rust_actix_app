@@ -29,3 +29,21 @@ pub struct UserToLogin {
     pub id: i32,
     pub password: String,
 }
+
+#[derive(sqlx::FromRow, Debug, Serialize)]
+pub struct TodoFromDB {
+    pub creator_id: i32,
+    pub id: i32,
+    pub completed: bool,
+    title: String,
+}
+
+#[derive(serde::Deserialize, Validate)]
+pub struct TodoCreateToDB {
+    #[validate(length(
+        min = 1,
+        max = 255,
+        message = "Todo title should be between 1 and 255 length"
+    ))]
+    pub title: String,
+}

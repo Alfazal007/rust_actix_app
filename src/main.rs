@@ -61,6 +61,20 @@ async fn main() -> std::io::Result<()> {
                             ),
                     ),
             )
+            .service(
+                web::scope("/api/v1/todo").service(
+                    web::scope("/protected")
+                        .wrap(from_fn(auth_middleware::auth_middleware))
+                        .route(
+                            "/createTodo",
+                            web::post().to(routes::todo::create_todo::create_todo),
+                        )
+                        .route(
+                            "/updateDone",
+                            web::put().to(routes::todo::mark_done_todo::mark_done_todo),
+                        ),
+                ),
+            )
     })
     .bind(("127.0.0.1", 8000))?
     .run();
