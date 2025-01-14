@@ -2,10 +2,12 @@ use std::env;
 
 use actix_web::{
     middleware::from_fn,
+    middleware::Logger,
     web::{self, Data},
     App, HttpServer,
 };
 use dotenvy::dotenv;
+use env_logger::Env;
 use middleware::auth_middleware;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
@@ -33,8 +35,11 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Issue creating the connection pool");
 
+    env_logger::init_from_env(Env::new().default_filter_or("info"));
+
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .app_data(Data::new(AppState {
                 db: pool.clone(),
                 access_secret: secret_key.clone(),
@@ -59,7 +64,5 @@ async fn main() -> std::io::Result<()> {
     })
     .bind(("127.0.0.1", 8000))?
     .run();
-
-    println!("The server started at port 8000");
     server.await
 }

@@ -34,7 +34,7 @@ pub async fn create_user(
         }
         Ok(data) => {
             if data.is_some() {
-                return HttpResponse::InternalServerError().json(crate::errors::GeneralError {
+                return HttpResponse::BadRequest().json(crate::errors::GeneralError {
                     errors: "User with this username already exists".to_string(),
                 });
             }
@@ -67,7 +67,6 @@ pub async fn create_user(
     }
 
     if new_user.as_ref().unwrap().is_none() {
-        println!("{:?}", new_user);
         return HttpResponse::InternalServerError().json(crate::errors::GeneralError {
             errors: "Issue writing to the database".to_string(),
         });
