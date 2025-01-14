@@ -1,15 +1,16 @@
 use std::env;
 
 use actix_web::{
+    middleware::from_fn,
     web::{self, Data},
     App, HttpServer,
 };
-use authmiddleware::AuthMiddleware;
 use dotenvy::dotenv;
+use middleware::auth_middleware;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
-mod authmiddleware;
 mod errors;
+mod middleware;
 mod models;
 mod routes;
 mod tokens;
@@ -23,8 +24,8 @@ pub struct AppState {
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL").unwrap();
-    let secret_key = env::var("ACCESSTOKENSECRET").unwrap();
+    let database_url = env::var("DATABASE_URL").expect("Database url not found in env files");
+    let secret_key = env::var("ACCESSTOKENSECRET").expect("Secret key not found in env files");
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -46,10 +47,14 @@ async fn main() -> std::io::Result<()> {
                         "/create",
                         web::post().to(routes::user::create_user::create_user),
                     )
-                    .service(web::scope("/protected").wrap(AuthMiddleware).route(
-                        "/currentUser",
-                        web::get().to(routes::user::current_user::get_current_user),
-                    )),
+                    .service(
+                        web::scope("/protected")
+                            .wrap(from_fn(auth_middleware::auth_middleware))
+                            .route(
+                                "/currentUser",
+                                web::get().to(routes::user::current_user::get_current_user),
+                            ),
+                    ),
             )
     })
     .bind(("127.0.0.1", 8000))?
